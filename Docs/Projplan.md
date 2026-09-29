@@ -1,0 +1,207 @@
+# Projplan – CampusAuth
+
+Planejamento principal do projeto. Atualizado em 2026-09-29.
+Fonte dos requisitos: [Regras-Do-Projeto.docx](Regras-Do-Projeto.docx).
+
+## Visão geral
+
+O CampusAuth é a área restrita de um sistema acadêmico. Só entra quem fizer login com Google ou criar conta com e-mail e senha; os dados ficam no Firestore. A atividade vale 1,50 ponto, mais 0,5 de bônus.
+
+**Stack:** HTML, CSS e JavaScript puro com ES modules, usando o Firebase JS SDK modular (v10+) carregado pelo CDN do gstatic. Não tem build nem framework, o que deixa o código fácil de explicar na apresentação.
+
+**Ordem de trabalho:** as áreas estão na ordem de prioridade abaixo. O Firestore (Área 3) vem antes do bônus (Área 4) porque o bônus grava no banco. O HTML começa na Área 1 como uma página de teste servida localmente, ganha o botão do Google na Área 2 e só vira a interface final na Área 5.
+
+| Área | Requisito | Nota |
+| --- | --- | --- |
+| 1 – Integração com o Firebase | base de tudo | — |
+| 2 – Login com Google | Req 1 | 0,20 |
+| 3 – Banco Firestore | base do Req 3 e do bônus | — |
+| 4 – Bônus: registro de acesso | Bônus | +0,50 |
+| 5 – HTML e interface | Organização | 0,20 |
+| 6 – Cadastro e e-mail duplicado | Req 2 e 3 | 0,20 + 0,25 |
+| 7 – Página protegida, dados e logout | Req 4, 5 e 6 | 0,25 + 0,20 + 0,20 |
+| 8 – Segurança e configuração | apoio | — |
+| 9 – Testes e entrega | Organização | — |
+
+### Fluxo do usuário
+
+```mermaid
+flowchart LR
+    A[index.html<br/>Login] -->|Entrar com Google| G[signInWithPopup]
+    A -->|Criar conta| C[cadastro.html]
+    C --> V{E-mail já existe<br/>no Firestore?}
+    V -->|sim| X[alert: Este e-mail já está cadastrado.]
+    V -->|não| N[createUserWithEmailAndPassword<br/>+ grava em usuarios]
+    G --> R[restrita.html]
+    N --> R
+    R -->|onAuthStateChanged sem usuário| A
+    R -->|Sair: signOut| A
+```
+
+## Área 1 – Integração com o Firebase
+
+Tudo depende desta área. Ela termina quando uma página de teste importa o Firebase e o console do navegador mostra o app inicializado, sem erros.
+
+- [ ] Criar o projeto no [Firebase Console](https://console.firebase.google.com) (ou usar o da aula)
+- [ ] Registrar um app Web e copiar o objeto `firebaseConfig`
+- [ ] Em Authentication, ativar os provedores **Google** e **E-mail/senha**
+- [ ] Criar o banco Firestore (modo de teste no início; as regras de verdade ficam na Área 8)
+- [ ] Criar `js/firebase-config.js`: `initializeApp`, e exportar `auth` (`getAuth`) e `db` (`getFirestore`)
+- [ ] Todas as outras páginas importam `auth` e `db` desse arquivo, nunca inicializam o app de novo
+- [ ] Subir um servidor local via npm (precisa do [Node.js](https://nodejs.org) instalado). Abrir o HTML direto pelo arquivo (`file://`) não funciona com ES modules nem com o popup do Google
+    - Na raiz do projeto: `npm init -y` e `npm install --save-dev live-server`
+    - No `package.json`, adicionar o script:
+
+```json
+"scripts": {
+  "dev": "live-server Codigo --host=localhost --port=5500 --open=index.html"
+}
+```
+
+    - Rodar com `npm run dev`: abre o navegador em `http://localhost:5500` e recarrega a página sozinho a cada arquivo salvo
+    - Para parar o servidor: **Ctrl + C** no terminal onde ele está rodando. Se o Windows perguntar "Deseja finalizar o arquivo em lotes (S/N)?", responder `S`
+    - Usar `localhost`, não `127.0.0.1`: só `localhost` vem liberado por padrão nos domínios autorizados do Firebase Auth
+    - Criar um `.gitignore` com `node_modules/`
+- [ ] Criar um `Codigo/index.html` provisório, só para testar a conexão:
+
+```html
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><title>Teste Firebase</title></head>
+<body>
+  <h1>Teste de conexão</h1>
+  <script type="module">
+    import { auth, db } from "./js/firebase-config.js";
+    console.log("Firebase OK:", auth.app.name, db.type);
+  </script>
+</body>
+</html>
+```
+
+- [ ] Rodar `npm run dev`, apertar F12 e confirmar `Firebase OK: [DEFAULT] firestore` no console, sem erros em vermelho
+- [ ] Esse `index.html` vira a tela de login nas Áreas 2 e 5
+
+A `apiKey` do Firebase Web não é segredo e pode ir para o repositório. Quem protege os dados são as regras do Firestore e os domínios autorizados.
+
+## Área 2 – Autenticação com Google (Req 1 · 0,20)
+
+O botão "Entrar com Google" abre o popup do Google e, com o login feito, leva para `restrita.html`.
+
+- [ ] Botão com o texto exato **Entrar com Google** em `index.html`
+- [ ] `new GoogleAuthProvider()` + `signInWithPopup(auth, provider)`
+- [ ] Depois do login, salvar o usuário em `usuarios` se ainda não existir (Área 3) e registrar o acesso (Área 4)
+- [ ] Redirecionar para `restrita.html`
+- [ ] Tratar erros: popup fechado (`auth/popup-closed-by-user`), popup bloqueado, domínio não autorizado
+
+## Área 3 – Banco Firestore
+
+Duas coleções: `usuarios` guarda um documento por pessoa e `acessos` guarda um documento por login.
+
+**`usuarios/{uid}`**
+
+| Campo | Tipo | Origem |
+| --- | --- | --- |
+| `nome` | string | formulário de cadastro ou `displayName` do Google |
+| `email` | string (minúsculo) | formulário ou Google |
+| `provedor` | string | `"google"` ou `"senha"` |
+| `criadoEm` | timestamp | `serverTimestamp()` |
+| `ultimoAcesso` | timestamp | atualizado a cada login (bônus) |
+
+**`acessos/{id automático}`** (bônus): `nome`, `email`, `ultimoAcesso: new Date()`.
+
+- [ ] Criar `js/db.js` com as funções `emailJaCadastrado(email)`, `salvarUsuario(user, dados)` e `registrarAcesso(user)`
+- [ ] `emailJaCadastrado` usa `query(collection(db, "usuarios"), where("email", "==", email))` + `getDocs`
+- [ ] Guardar o e-mail sempre em minúsculo e sem espaços, para `Joao@Teste.com` e `joao@teste.com` contarem como o mesmo
+
+## Área 4 – Bônus: registro de acesso (+0,5)
+
+A cada login (Google ou e-mail/senha), gravar no Firestore o objeto pedido na atividade:
+
+```js
+{ nome: usuario.displayName, email: usuario.email, ultimoAcesso: new Date() }
+```
+
+- [ ] `addDoc(collection(db, "acessos"), {...})` para manter o histórico completo
+- [ ] Também atualizar `ultimoAcesso` em `usuarios/{uid}` com `setDoc(..., { merge: true })`
+- [ ] Chamar logo depois do login com sucesso, antes de redirecionar
+- [ ] Cuidado: no cadastro por e-mail o `displayName` vem `null`. Chamar `updateProfile(user, { displayName: nome })` logo após criar a conta (ver Área 6)
+
+## Área 5 – HTML e interface
+
+Três páginas, um CSS e um JS por página, sem framework.
+
+```
+package.json            # script "npm run dev" (servidor local, Área 1)
+.gitignore              # node_modules/
+Codigo/
+├── index.html          # login: botão Google + login e-mail/senha + link para cadastro
+├── cadastro.html       # Nome, E-mail, Senha
+├── restrita.html       # "Bem-vindo(a), <nome>", e-mail, botão Sair
+├── css/
+│   └── style.css
+├── js/
+│   ├── firebase-config.js
+│   ├── db.js
+│   ├── login.js
+│   ├── cadastro.js
+│   └── restrita.js
+└── firestore.rules
+```
+
+- [ ] Scripts carregados com `<script type="module">`
+- [ ] Formulários com `required`, `type="email"` e `minlength="6"` na senha (mínimo do Firebase)
+- [ ] Mensagens de erro em português na tela (senha fraca, e-mail inválido, senha incorreta)
+- [ ] Layout simples e responsivo: um card centralizado por página
+
+## Área 6 – Cadastro com e-mail/senha e e-mail duplicado (Req 2 · 0,20 e Req 3 · 0,25)
+
+A verificação de duplicado roda **antes** de criar a conta e de gravar qualquer coisa.
+
+1. Ler Nome, E-mail e Senha; normalizar o e-mail.
+2. `emailJaCadastrado(email)`. Se for `true`: `alert("Este e-mail já está cadastrado.");` e parar. Nada é gravado.
+3. `createUserWithEmailAndPassword(auth, email, senha)`.
+4. `updateProfile(user, { displayName: nome })`.
+5. `salvarUsuario(user, { nome, email, provedor: "senha" })` em `usuarios/{uid}`.
+6. `registrarAcesso(user)` (bônus) e redirecionar para `restrita.html`.
+
+- [ ] Se o Auth devolver `auth/email-already-in-use` (e-mail no Auth mas não no Firestore), mostrar o mesmo alert
+- [ ] Um usuário que entrou com Google e depois tenta se cadastrar com o mesmo e-mail também deve ser barrado
+
+## Área 7 – Página protegida, dados e logout (Req 4 · 0,25 · Req 5 · 0,20 · Req 6 · 0,20)
+
+`restrita.html` só mostra conteúdo depois que `onAuthStateChanged` confirma o usuário.
+
+- [ ] Conteúdo começa escondido; sem usuário → `window.location.replace("index.html")`
+- [ ] Com usuário: mostrar **Bem-vindo(a), {nome}** e o e-mail
+- [ ] Nome vem de `user.displayName`; se estiver vazio, buscar em `usuarios/{uid}`
+- [ ] Botão **Sair**: `signOut(auth)` e depois redirecionar para `index.html`
+- [ ] Em `index.html`, se o usuário já estiver logado, mandar direto para a área restrita
+
+## Área 8 – Segurança e configuração
+
+- [ ] Conferir em Authentication → Settings → Authorized domains que `localhost` (e o domínio de hospedagem, se houver) está na lista
+- [ ] Trocar o modo de teste por regras em `firestore.rules`:
+    - `usuarios/{uid}`: gravação só pelo próprio `uid`
+    - `acessos`: criação só por usuário autenticado; leitura restrita
+    - Leitura de `usuarios` por e-mail: a checagem de duplicado roda **antes** do login, então precisa de leitura sem autenticação. Ver pontos em aberto.
+
+## Área 9 – Testes, organização e entrega
+
+Um teste por critério de avaliação, feito no navegador antes da entrega.
+
+- [ ] **Login com Google (0,20):** botão abre o popup, login leva à área restrita
+- [ ] **Cadastro (0,20):** conta nova com Nome, E-mail e Senha entra na área restrita
+- [ ] **E-mail duplicado (0,25):** cadastrar `joao@teste.com` duas vezes → segunda vez mostra o alert e o Firestore continua com um só registro
+- [ ] **Página protegida (0,25):** abrir `restrita.html` sem login (aba anônima) redireciona para o login
+- [ ] **Dados do usuário (0,20):** aparece "Bem-vindo(a), nome" e o e-mail, tanto com Google quanto com e-mail/senha
+- [ ] **Logout (0,20):** Sair volta para o login, e voltar pelo navegador não reabre a área restrita
+- [ ] **Organização (0,20):** pastas como na Área 5, código comentado onde não for óbvio, README com como rodar
+- [ ] **Bônus (+0,5):** cada login gera um documento em `acessos` com `nome`, `email` e `ultimoAcesso`
+
+## Pontos em aberto
+
+- [ ] **Projeto base da aula:** o documento pede para partir dele. Se existir, colocar em `Codigo/` e adaptar este plano à estrutura dele.
+- [ ] **Projeto Firebase:** criar um novo ou usar um já existente?
+- [ ] **Leitura sem login para checar duplicado:** aceitar (mais simples, é o que o enunciado pede) ou criar uma coleção só de e-mails com leitura pública limitada?
+- [ ] **Login por e-mail/senha na tela inicial:** o enunciado só pede cadastro, mas sem ele quem se cadastrou não consegue entrar de novo depois do logout. Plano atual: incluir.
+- [ ] **Hospedagem:** entregar rodando local ou publicar no Firebase Hosting?
