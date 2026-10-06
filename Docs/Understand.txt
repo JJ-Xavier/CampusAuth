@@ -1,0 +1,5 @@
+cd "C:\Users\jacks\.claude\plugins\cache\understand-anything\understand-anything\2.9.7\packages\dashboard"
+$env:GRAPH_DIR = "C:\Projetos\CampusAuth"; npx vite --host 127.0.0.1
+
+
+encerrar understad = Control + C

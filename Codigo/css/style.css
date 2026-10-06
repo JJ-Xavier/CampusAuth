@@ -1,0 +1,827 @@
+/* CampusAuth: estilo das três páginas (login, cadastro e área restrita). */
+
+:root {
+  --cor-fundo-1: #1e1b4b;
+  --cor-fundo-2: #3730a3;
+  --cor-fundo-3: #2563eb;
+  --cor-primaria: #4f46e5;
+  --cor-primaria-clara: #eef2ff;
+  --cor-texto: #0f172a;
+  --cor-texto-suave: #475569;
+  --cor-borda: #64748b;
+  --cor-borda-suave: #e2e8f0;
+  --cor-campo: #f8fafc;
+  --cor-pagina: #f1f5f9;
+  --cor-erro: #b91c1c;
+  --cor-erro-fundo: #fef2f2;
+  --cor-destaque: #a5f3fc;
+
+  --gradiente-fundo: linear-gradient(135deg, var(--cor-fundo-1) 0%, var(--cor-fundo-2) 45%, var(--cor-fundo-3) 100%);
+  --gradiente-botao: linear-gradient(135deg, #4f46e5, #2563eb);
+  --gradiente-selo: linear-gradient(135deg, #22d3ee, #a78bfa);
+
+  --fonte-titulo: "Outfit", system-ui, sans-serif;
+  --fonte-texto: "Plus Jakarta Sans", system-ui, sans-serif;
+
+  --raio-cartao: 1.5rem;
+  --raio-campo: 0.75rem;
+  --altura-controle: max(44px, 3rem);
+
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Tamanho base fluido: acompanha a altura da tela (1svh), mas fica entre 14px e 18px.
+   O piso e o teto em rem mantêm o texto legível e respeitam o zoom e a fonte escolhida no navegador.
+   Como espaçamentos e alturas usam rem, a tela inteira escala junto. */
+html {
+  font-size: clamp(0.875rem, 0.5rem + 1svh, 1.125rem);
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  font-family: var(--fonte-texto);
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--cor-texto);
+}
+
+a {
+  color: var(--cor-primaria);
+  font-weight: 600;
+}
+
+a:hover {
+  color: var(--cor-fundo-2);
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 3px solid var(--cor-primaria);
+  outline-offset: 2px;
+}
+
+.visualmente-oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---------- Marca ---------- */
+
+.marca {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: var(--fonte-titulo);
+  font-size: 1.375rem;
+  font-weight: 600;
+  color: inherit;
+  text-decoration: none;
+}
+
+.marca:hover {
+  color: inherit;
+}
+
+.marca__icone {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.625rem;
+  background: rgb(255 255 255 / 0.16);
+  border: 1px solid rgb(255 255 255 / 0.35);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+/* ---------- Páginas de entrada (login e cadastro) ---------- */
+
+.pagina-entrada {
+  background-color: var(--cor-fundo-1);
+  background-image: var(--gradiente-fundo);
+  background-attachment: fixed;
+  color: #fff;
+  overflow-x: hidden;
+}
+
+/* Formas decorativas atrás do conteúdo */
+.fundo {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.fundo__forma {
+  position: absolute;
+  border-radius: 50%;
+}
+
+.fundo__forma--ciano {
+  width: 560px;
+  height: 560px;
+  top: -180px;
+  right: 8%;
+  background: radial-gradient(circle, rgb(34 211 238 / 0.55), rgb(34 211 238 / 0) 70%);
+}
+
+.fundo__forma--violeta {
+  width: 640px;
+  height: 640px;
+  right: -160px;
+  bottom: -220px;
+  background: radial-gradient(circle, rgb(167 139 250 / 0.6), rgb(167 139 250 / 0) 70%);
+}
+
+.fundo__forma--azul {
+  width: 460px;
+  height: 460px;
+  left: -140px;
+  bottom: -160px;
+  background: radial-gradient(circle, rgb(59 130 246 / 0.6), rgb(59 130 246 / 0) 70%);
+}
+
+.fundo__forma--vidro {
+  width: 380px;
+  height: 380px;
+  top: 10%;
+  right: 4%;
+  border-radius: 56px;
+  transform: rotate(18deg);
+  border: 1px solid rgb(255 255 255 / 0.22);
+  background: rgb(255 255 255 / 0.05);
+}
+
+.fundo__forma--anel {
+  width: 560px;
+  height: 560px;
+  right: 12%;
+  bottom: -140px;
+  border: 1px solid rgb(255 255 255 / 0.16);
+}
+
+/* Cartão à esquerda, chamada grande à direita, ocupando a janela inteira */
+.entrada {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 27.5rem) minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    "topo topo"
+    "cartao chamada";
+  column-gap: 6rem;
+  row-gap: clamp(1rem, 3dvh, 1.75rem);
+  max-width: 75rem;
+  min-height: 100dvh;
+  margin-inline: auto;
+  padding: clamp(1rem, 3.5dvh, 2.75rem) 3rem;
+}
+
+.entrada__topo {
+  grid-area: topo;
+}
+
+.entrada > .cartao,
+.chamada {
+  align-self: center;
+}
+
+.chamada {
+  grid-area: chamada;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.chamada__titulo {
+  margin: 0;
+  font-family: var(--fonte-titulo);
+  font-size: clamp(3rem, 1.5rem + 4vw, 4.75rem);
+  font-weight: 600;
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+}
+
+.chamada__titulo span {
+  display: block;
+}
+
+.chamada__titulo .destaque {
+  color: var(--cor-destaque);
+}
+
+.chamada__titulo .suave {
+  color: rgb(255 255 255 / 0.72);
+}
+
+.chamada__texto {
+  margin: 0;
+  max-width: 28rem;
+  font-size: 1.125rem;
+  color: rgb(255 255 255 / 0.88);
+}
+
+.selo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  max-width: 23.75rem;
+  margin-top: 1.5rem;
+  padding: 1rem 1.25rem;
+  border-radius: 1.125rem;
+  border: 1px solid rgb(255 255 255 / 0.28);
+  background: rgb(255 255 255 / 0.12);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+.selo__icone {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.75rem;
+  background: var(--gradiente-selo);
+}
+
+.selo__icone::after {
+  content: "";
+  width: 0.875rem;
+  height: 0.875rem;
+  border-radius: 50%;
+  border: 3px solid #fff;
+}
+
+.selo strong {
+  display: block;
+  font-size: 0.9375rem;
+}
+
+.selo span {
+  font-size: 0.875rem;
+  color: rgb(255 255 255 / 0.85);
+}
+
+/* ---------- Cartão e formulário ---------- */
+
+.cartao {
+  grid-area: cartao;
+  width: 100%;
+  max-width: 27.5rem;
+  justify-self: center;
+  padding: 2rem 2.5rem;
+  border-radius: var(--raio-cartao);
+  background: #fff;
+  color: var(--cor-texto);
+  box-shadow: 0 30px 60px rgb(15 23 42 / 0.35);
+}
+
+.cartao h1 {
+  margin: 0;
+  font-family: var(--fonte-titulo);
+  font-size: 1.875rem;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+.cartao__subtitulo {
+  margin: 0.375rem 0 0;
+  font-size: 0.9375rem;
+  color: var(--cor-texto-suave);
+}
+
+.cartao__corpo {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.cartao__rodape {
+  margin: 1.25rem 0 0;
+  font-size: 0.875rem;
+  text-align: center;
+  color: var(--cor-texto-suave);
+}
+
+.divisor {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--cor-texto-suave);
+}
+
+.divisor::before,
+.divisor::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--cor-borda-suave);
+}
+
+.formulario {
+  display: grid;
+  gap: 0.875rem;
+}
+
+.campo {
+  display: grid;
+  gap: 0.375rem;
+}
+
+/* Rótulo e erro na mesma linha: o erro aparece sem empurrar o resto da tela */
+.campo__topo {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.campo label {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.campo__dica {
+  font-size: 0.8125rem;
+  color: var(--cor-texto-suave);
+}
+
+.campo input {
+  width: 100%;
+  min-height: var(--altura-controle);
+  padding: 0 1rem;
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-campo);
+  background: var(--cor-campo);
+  color: var(--cor-texto);
+  font: inherit;
+  font-size: 1rem;
+}
+
+.campo input:focus-visible {
+  outline: none;
+  border-color: var(--cor-primaria);
+  box-shadow: 0 0 0 4px rgb(79 70 229 / 0.25);
+}
+
+/* Erro só depois que a pessoa sai do campo ou tenta enviar (:user-invalid) */
+.campo input:user-invalid {
+  border: 2px solid var(--cor-erro);
+  background: var(--cor-erro-fundo);
+}
+
+.campo__erro {
+  visibility: hidden;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-align: right;
+  color: var(--cor-erro);
+}
+
+.campo:has(input:user-invalid) .campo__erro {
+  visibility: visible;
+}
+
+.campo:has(input:user-invalid) .campo__dica {
+  color: var(--cor-erro);
+}
+
+.campo__senha {
+  position: relative;
+}
+
+.campo__senha input {
+  padding-right: 6.5rem;
+}
+
+.botao-senha {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  bottom: 0.25rem;
+  min-width: 5.5rem;
+  padding: 0 0.75rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--cor-primaria);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.botao-senha:hover {
+  background: var(--cor-primaria-clara);
+}
+
+.botao-senha:focus-visible {
+  outline-offset: 0;
+}
+
+/* Erros que vêm do Firebase (senha incorreta, e-mail já cadastrado...) */
+.mensagem {
+  margin: 0.5rem 0 0;
+  padding: 0.625rem 0.875rem;
+  border-radius: var(--raio-campo);
+  background: var(--cor-erro-fundo);
+  color: var(--cor-erro);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.mensagem:empty {
+  display: none;
+}
+
+.cartao:has(.mensagem:not(:empty)) .cartao__subtitulo {
+  display: none;
+}
+
+/* ---------- Botões ---------- */
+
+.botao {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  min-height: var(--altura-controle);
+  padding: 0 1.25rem;
+  border-radius: var(--raio-campo);
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
+}
+
+.botao--google {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: var(--cor-texto);
+}
+
+.botao--google:hover {
+  background: var(--cor-pagina);
+}
+
+.botao--primario {
+  width: 100%;
+  border: 0;
+  background: var(--gradiente-botao);
+  color: #fff;
+  box-shadow: 0 10px 20px rgb(79 70 229 / 0.35);
+}
+
+.botao--primario:hover {
+  filter: brightness(1.08);
+}
+
+.botao--secundario {
+  min-height: max(44px, 2.75rem);
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: var(--cor-texto);
+}
+
+.botao--secundario:hover {
+  background: var(--cor-pagina);
+}
+
+.botao:disabled {
+  cursor: progress;
+  opacity: 0.8;
+}
+
+/* Indicador de carregando enquanto o Firebase responde */
+.botao[aria-busy="true"]::before {
+  content: "";
+  width: 1.125rem;
+  height: 1.125rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  animation: girar 0.8s linear infinite;
+}
+
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- Área restrita ---------- */
+
+.pagina-restrita {
+  background: var(--cor-pagina);
+}
+
+#conteudo:not([hidden]) {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: 100dvh;
+}
+
+.carregando {
+  margin: 0;
+  padding: 3rem 1rem;
+  text-align: center;
+  color: var(--cor-texto-suave);
+}
+
+.topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 4.5rem;
+  padding: 0.75rem 3rem;
+  background: #fff;
+  border-bottom: 1px solid var(--cor-borda-suave);
+}
+
+.topo .marca {
+  color: var(--cor-fundo-1);
+}
+
+.topo .marca__icone {
+  border: 0;
+  background: var(--gradiente-botao);
+  color: #fff;
+}
+
+.usuario {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: var(--gradiente-selo);
+  color: var(--cor-fundo-1);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.usuario__dados {
+  display: grid;
+}
+
+.usuario__nome {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.usuario__email {
+  font-size: 0.8125rem;
+  color: var(--cor-texto-suave);
+}
+
+.painel {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  gap: clamp(1rem, 3dvh, 1.5rem);
+  width: 100%;
+  max-width: 74rem;
+  margin-inline: auto;
+  padding: clamp(1.25rem, 4dvh, 2rem) 3rem;
+}
+
+.boas-vindas {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 3.5rem 3rem;
+  border-radius: var(--raio-cartao);
+  background: var(--gradiente-fundo);
+  color: #fff;
+}
+
+.boas-vindas__forma {
+  position: absolute;
+  z-index: -1;
+  border-radius: 50%;
+}
+
+.boas-vindas__forma--ciano {
+  width: 420px;
+  height: 420px;
+  top: -200px;
+  right: 20%;
+  background: radial-gradient(circle, rgb(34 211 238 / 0.55), rgb(34 211 238 / 0) 70%);
+}
+
+.boas-vindas__forma--violeta {
+  width: 480px;
+  height: 480px;
+  top: -40px;
+  right: -120px;
+  background: radial-gradient(circle, rgb(167 139 250 / 0.6), rgb(167 139 250 / 0) 70%);
+}
+
+.boas-vindas__forma--vidro {
+  width: 260px;
+  height: 260px;
+  top: 20px;
+  right: 6%;
+  border-radius: 44px;
+  transform: rotate(18deg);
+  border: 1px solid rgb(255 255 255 / 0.22);
+  background: rgb(255 255 255 / 0.05);
+}
+
+.boas-vindas__selo {
+  display: inline-block;
+  padding: 0.375rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgb(255 255 255 / 0.28);
+  background: rgb(255 255 255 / 0.14);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.boas-vindas h1 {
+  margin: 0.75rem 0 0.5rem;
+  font-family: var(--fonte-titulo);
+  font-size: clamp(2rem, 5vw, 3.25rem);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+
+.boas-vindas p {
+  margin: 0;
+  font-size: 1.0625rem;
+  color: rgb(255 255 255 / 0.88);
+  overflow-wrap: anywhere;
+}
+
+.secao-titulo {
+  margin: 0 0 1rem;
+  font-family: var(--fonte-titulo);
+  font-size: 1.375rem;
+  font-weight: 600;
+}
+
+.dados {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(0.75rem, 2dvh, 1.25rem);
+  margin: 0;
+}
+
+.dado {
+  display: grid;
+  gap: 0.5rem;
+  align-content: start;
+  padding: 1.5rem;
+  border-radius: 1.125rem;
+  border: 1px solid var(--cor-borda-suave);
+  background: #fff;
+}
+
+.dado::before {
+  content: "";
+  width: 2rem;
+  height: 0.25rem;
+  border-radius: 2px;
+  background: var(--cor-dado, var(--cor-primaria));
+}
+
+.dado:nth-child(2) {
+  --cor-dado: #22d3ee;
+}
+
+.dado:nth-child(3) {
+  --cor-dado: #a78bfa;
+}
+
+.dado:nth-child(4) {
+  --cor-dado: #2563eb;
+}
+
+.dado dt {
+  font-size: 0.8125rem;
+  color: var(--cor-texto-suave);
+}
+
+.dado dd {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Janelas baixas ----------
+   Notebook com zoom, F12 aberto embaixo, barra de favoritos: a altura útil cai abaixo de ~640px.
+   A versão compacta mantém tudo na tela sem rolagem. */
+
+@media (max-height: 640px) {
+  :root {
+    --altura-controle: 2.625rem;
+  }
+
+  /* A logo sobe para a coluna da direita e o cartão usa a altura inteira */
+  .entrada {
+    grid-template-areas:
+      "cartao topo"
+      "cartao chamada";
+  }
+
+  .cartao {
+    padding: 1.5rem 2.25rem;
+  }
+
+  .cartao h1 {
+    font-size: 1.625rem;
+  }
+
+  .cartao__corpo {
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+
+  .cartao__rodape {
+    margin-top: 1rem;
+  }
+
+  .formulario {
+    gap: 0.625rem;
+  }
+
+  .campo {
+    gap: 0.25rem;
+  }
+
+  .chamada__titulo {
+    font-size: clamp(2.5rem, 1rem + 3.5vw, 3.75rem);
+  }
+
+  .selo {
+    margin-top: 0.75rem;
+  }
+}
+
+/* Altura muito pequena: o texto pode chegar a 13px para não precisar rolar */
+@media (max-height: 520px) {
+  html {
+    font-size: 0.8125rem;
+  }
+
+  .entrada {
+    row-gap: 0.75rem;
+    padding-block: 0.75rem;
+  }
+
+  .cartao {
+    padding-block: 1.25rem;
+  }
+
+  .mensagem {
+    padding: 0.5rem 0.75rem;
+  }
+}
+
+/* ---------- Movimento reduzido ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .botao {
+    transition: none;
+  }
+
+  .botao[aria-busy="true"]::before {
+    animation: none;
+    border-right-color: currentColor;
+    opacity: 0.6;
+  }
+}

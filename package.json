@@ -1,0 +1,12 @@
+{
+  "name": "campusauth",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Área restrita de um sistema acadêmico com Firebase Authentication e Firestore.",
+  "scripts": {
+    "dev": "live-server Codigo --host=localhost --port=5500 --open=index.html"
+  },
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  }
+}
