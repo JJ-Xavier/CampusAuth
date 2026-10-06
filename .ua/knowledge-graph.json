@@ -1,0 +1,1275 @@
+{
+  "version": "1.0.0",
+  "project": {
+    "name": "campusauth",
+    "languages": [
+      "css",
+      "html",
+      "javascript",
+      "json",
+      "markdown",
+      "rules"
+    ],
+    "frameworks": [
+      "Firebase"
+    ],
+    "description": "Área restrita de um sistema acadêmico com Firebase Authentication e Cloud Firestore: login com Google, cadastro com e-mail e senha, checagem de e-mail duplicado, página protegida por onAuthStateChanged e histórico de acessos.",
+    "analyzedAt": "2026-10-06T02:23:53.681Z",
+    "gitCommitHash": "77f4aededf075febe13529e355e371ed5a9c406d"
+  },
+  "nodes": [
+    {
+      "id": "file:Codigo/js/cadastro.js",
+      "type": "file",
+      "name": "cadastro.js",
+      "filePath": "Codigo/js/cadastro.js",
+      "summary": "Script da página de cadastro: no submit do formulário, normaliza o e-mail, consulta o Firestore para barrar e-mails duplicados, cria a conta com createUserWithEmailAndPassword, grava o displayName e o documento do usuário, registra o acesso e redireciona para restrita.html. Também trata o erro auth/email-already-in-use para contas que existem só no Authentication.",
+      "tags": [
+        "entry-point",
+        "cadastro",
+        "autenticação",
+        "event-handler",
+        "firebase"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Módulo ES sem exports que executa efeitos colaterais no carregamento (redirecionarSeLogado, sincronizarErros) e importa o Firebase Auth direto do CDN gstatic; usa try/catch/finally com async/await para garantir que o botão saia do estado de carregamento."
+    },
+    {
+      "id": "file:Codigo/js/erros.js",
+      "type": "file",
+      "name": "erros.js",
+      "filePath": "Codigo/js/erros.js",
+      "summary": "Dicionário que traduz códigos de erro do Firebase Authentication e do Firestore (como auth/invalid-credential e permission-denied) para mensagens amigáveis em português, com uma mensagem genérica de fallback.",
+      "tags": [
+        "utility",
+        "tratamento-de-erros",
+        "i18n",
+        "firebase"
+      ],
+      "complexity": "simple",
+      "languageNotes": "Usa o operador de coalescência nula (??) para cair na mensagem padrão quando o código não está mapeado."
+    },
+    {
+      "id": "function:Codigo/js/erros.js:mensagemDeErro",
+      "type": "function",
+      "name": "mensagemDeErro",
+      "filePath": "Codigo/js/erros.js",
+      "lineRange": [
+        22,
+        24
+      ],
+      "summary": "Recebe um erro do Firebase e devolve a mensagem em português correspondente ao seu campo code, ou \"Algo deu errado. Tente de novo.\" quando o código é desconhecido.",
+      "tags": [
+        "utility",
+        "tratamento-de-erros",
+        "i18n"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:Codigo/js/formulario.js",
+      "type": "file",
+      "name": "formulario.js",
+      "filePath": "Codigo/js/formulario.js",
+      "summary": "Comportamentos compartilhados pelos formulários de login e cadastro: sincroniza aria-invalid com o estado :user-invalid, liga os botões de mostrar/ocultar senha e controla o estado de carregamento dos botões de envio.",
+      "tags": [
+        "utility",
+        "acessibilidade",
+        "formulário",
+        "ui",
+        "validation"
+      ],
+      "complexity": "simple",
+      "languageNotes": "Usa listeners em fase de captura (terceiro argumento true) para eventos blur e invalid, que não borbulham, e encadeamento opcional em chamadas de método (campo.matches?.())."
+    },
+    {
+      "id": "function:Codigo/js/formulario.js:sincronizarErros",
+      "type": "function",
+      "name": "sincronizarErros",
+      "filePath": "Codigo/js/formulario.js",
+      "lineRange": [
+        5,
+        21
+      ],
+      "summary": "Registra listeners de blur, input e invalid no formulário para manter o atributo aria-invalid alinhado ao pseudo-seletor :user-invalid, de modo que leitores de tela só anunciem o erro quando ele aparece visualmente.",
+      "tags": [
+        "acessibilidade",
+        "validation",
+        "event-handler",
+        "aria"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:Codigo/js/formulario.js:ativarMostrarSenha",
+      "type": "function",
+      "name": "ativarMostrarSenha",
+      "filePath": "Codigo/js/formulario.js",
+      "lineRange": [
+        24,
+        35
+      ],
+      "summary": "Encontra os botões com data-mostrar-senha dentro da raiz informada e alterna o tipo do campo de senha associado via aria-controls entre password e text, atualizando o texto e o aria-label do botão.",
+      "tags": [
+        "ui",
+        "acessibilidade",
+        "event-handler",
+        "senha"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:Codigo/js/formulario.js:definirCarregando",
+      "type": "function",
+      "name": "definirCarregando",
+      "filePath": "Codigo/js/formulario.js",
+      "lineRange": [
+        38,
+        45
+      ],
+      "summary": "Desativa ou reativa um botão de envio e define ou remove aria-busy, evitando envio duplicado e sinalizando o carregamento.",
+      "tags": [
+        "ui",
+        "acessibilidade",
+        "estado-de-carregamento"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:Codigo/js/login.js",
+      "type": "file",
+      "name": "login.js",
+      "filePath": "Codigo/js/login.js",
+      "summary": "Script da página de login que oferece entrada com Google (signInWithPopup com select_account) e com e-mail e senha; nos dois casos garante o usuário no Firestore, registra o acesso e redireciona para restrita.html, bloqueando os dois botões enquanto um login está em andamento.",
+      "tags": [
+        "entry-point",
+        "login",
+        "autenticação",
+        "event-handler",
+        "firebase"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Módulo ES sem exports que concentra o passo comum aos dois provedores em concluirLogin e configura o GoogleAuthProvider com setCustomParameters para sempre exibir o seletor de conta."
+    },
+    {
+      "id": "file:Codigo/js/sessao.js",
+      "type": "file",
+      "name": "sessao.js",
+      "filePath": "Codigo/js/sessao.js",
+      "summary": "Utilitário de sessão que redireciona para a área restrita quem já está autenticado ao abrir as páginas de login ou cadastro.",
+      "tags": [
+        "sessão",
+        "autenticação",
+        "redirecionamento",
+        "firebase"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:Codigo/js/sessao.js:redirecionarSeLogado",
+      "type": "function",
+      "name": "redirecionarSeLogado",
+      "filePath": "Codigo/js/sessao.js",
+      "lineRange": [
+        7,
+        12
+      ],
+      "summary": "Assina onAuthStateChanged, cancela a assinatura logo na primeira resposta e, se houver usuário logado, faz window.location.replace para restrita.html.",
+      "tags": [
+        "sessão",
+        "autenticação",
+        "redirecionamento",
+        "guard"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:Codigo/js/db.js",
+      "type": "file",
+      "name": "db.js",
+      "filePath": "Codigo/js/db.js",
+      "summary": "Camada de acesso ao Cloud Firestore que concentra as operações sobre as coleções `usuarios` (um documento por pessoa) e `acessos` (histórico de logins), incluindo normalização de e-mail e checagem de e-mail duplicado.",
+      "tags": [
+        "service",
+        "firestore",
+        "data-access",
+        "persistencia",
+        "utility"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Módulo ES que importa o Firebase JS SDK 12 diretamente da CDN gstatic; todas as funções assíncronas retornam Promises e usam a API modular (doc, getDoc, setDoc com merge, addDoc, serverTimestamp)."
+    },
+    {
+      "id": "function:Codigo/js/db.js:normalizarEmail",
+      "type": "function",
+      "name": "normalizarEmail",
+      "filePath": "Codigo/js/db.js",
+      "lineRange": [
+        17,
+        19
+      ],
+      "summary": "Remove espaços nas extremidades e converte o e-mail para minúsculas, garantindo que variações de caixa sejam tratadas como o mesmo endereço.",
+      "tags": [
+        "utility",
+        "validation",
+        "normalizacao",
+        "email"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:Codigo/js/db.js:emailJaCadastrado",
+      "type": "function",
+      "name": "emailJaCadastrado",
+      "filePath": "Codigo/js/db.js",
+      "lineRange": [
+        21,
+        29
+      ],
+      "summary": "Consulta a coleção `usuarios` filtrando pelo e-mail normalizado (limit 1) e retorna se já existe um cadastro com esse endereço.",
+      "tags": [
+        "validation",
+        "firestore",
+        "query",
+        "email-duplicado"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:Codigo/js/db.js:buscarUsuario",
+      "type": "function",
+      "name": "buscarUsuario",
+      "filePath": "Codigo/js/db.js",
+      "lineRange": [
+        31,
+        34
+      ],
+      "summary": "Lê o documento `usuarios/{uid}` no Firestore e devolve seus dados, ou null quando o documento não existe.",
+      "tags": [
+        "firestore",
+        "data-access",
+        "leitura",
+        "usuario"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:Codigo/js/db.js:salvarUsuario",
+      "type": "function",
+      "name": "salvarUsuario",
+      "filePath": "Codigo/js/db.js",
+      "lineRange": [
+        37,
+        48
+      ],
+      "summary": "Cria o documento `usuarios/{uid}` com nome, e-mail normalizado, provedor e `criadoEm` apenas se ele ainda não existir, evitando sobrescrever a data de criação a cada login com Google.",
+      "tags": [
+        "firestore",
+        "persistencia",
+        "cadastro",
+        "idempotente"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:Codigo/js/db.js:registrarAcesso",
+      "type": "function",
+      "name": "registrarAcesso",
+      "filePath": "Codigo/js/db.js",
+      "lineRange": [
+        51,
+        61
+      ],
+      "summary": "Registra cada login como novo documento na coleção `acessos` e atualiza, com merge, o campo `ultimoAcesso` em `usuarios/{uid}`.",
+      "tags": [
+        "firestore",
+        "historico-de-acessos",
+        "auditoria",
+        "persistencia"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:Codigo/js/firebase-config.js",
+      "type": "file",
+      "name": "firebase-config.js",
+      "filePath": "Codigo/js/firebase-config.js",
+      "summary": "Inicializa o app Firebase uma única vez com as credenciais públicas do projeto e exporta as instâncias compartilhadas `app`, `auth` (Firebase Authentication) e `db` (Cloud Firestore) usadas por todas as páginas.",
+      "tags": [
+        "config",
+        "singleton",
+        "firebase",
+        "inicializacao",
+        "entry-point"
+      ],
+      "complexity": "simple",
+      "languageNotes": "A apiKey do Firebase Web não é segredo: a proteção dos dados fica a cargo das regras de segurança do Firestore. O padrão de módulo ES garante instância única, já que o módulo é avaliado só uma vez por página."
+    },
+    {
+      "id": "file:Codigo/js/restrita.js",
+      "type": "file",
+      "name": "restrita.js",
+      "filePath": "Codigo/js/restrita.js",
+      "summary": "Script da página restrita: protege o conteúdo com onAuthStateChanged (redirecionando para o login sem sessão), complementa os dados do Auth com o documento do Firestore, preenche nome, e-mail, avatar com iniciais, provedor e último acesso, e trata o logout.",
+      "tags": [
+        "page-controller",
+        "autenticacao",
+        "rota-protegida",
+        "event-handler",
+        "dom"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Usa Intl.DateTimeFormat pt-BR para formatar datas, optional chaining e nullish coalescing para dados opcionais, e window.location.replace para não deixar a página protegida no histórico de navegação."
+    },
+    {
+      "id": "file:Codigo/cadastro.html",
+      "type": "file",
+      "name": "cadastro.html",
+      "filePath": "Codigo/cadastro.html",
+      "summary": "Página de criação de conta com formulário de nome, e-mail e senha (mínimo de 6 caracteres), botão de mostrar senha e mensagens de erro por campo. A lógica de cadastro e checagem de e-mail duplicado fica no módulo js/cadastro.js.",
+      "tags": [
+        "pagina",
+        "formulario",
+        "cadastro",
+        "autenticacao",
+        "acessibilidade"
+      ],
+      "complexity": "simple",
+      "languageNotes": "Usa validação nativa do HTML (required, minlength, pattern=\".*\\S.*\") junto com aria-errormessage e aria-describedby, e autocomplete=\"new-password\" para que gerenciadores de senha sugiram uma senha nova."
+    },
+    {
+      "id": "file:Codigo/index.html",
+      "type": "file",
+      "name": "index.html",
+      "filePath": "Codigo/index.html",
+      "summary": "Página inicial de login do CampusAuth, com botão \"Entrar com Google\" e formulário de e-mail e senha. Carrega o módulo js/login.js, que faz a autenticação no Firebase e registra o acesso no histórico.",
+      "tags": [
+        "entry-point",
+        "pagina",
+        "login",
+        "autenticacao",
+        "formulario"
+      ],
+      "complexity": "simple",
+      "languageNotes": "Os atributos autocomplete=\"username\" e autocomplete=\"current-password\" permitem que o navegador preencha credenciais salvas. O ícone do Google é um SVG inline marcado com aria-hidden."
+    },
+    {
+      "id": "file:Codigo/restrita.html",
+      "type": "file",
+      "name": "restrita.html",
+      "filePath": "Codigo/restrita.html",
+      "summary": "Página protegida da área restrita. Mostra \"Verificando sua sessão...\" enquanto o conteúdo fica oculto (atributo hidden) até o onAuthStateChanged confirmar o usuário, e então exibe boas-vindas, nome, e-mail, forma de login, último acesso e o botão Sair, todos preenchidos por js/restrita.js.",
+      "tags": [
+        "pagina",
+        "area-restrita",
+        "sessao",
+        "autenticacao",
+        "painel"
+      ],
+      "complexity": "simple",
+      "languageNotes": "O conteúdo começa com o atributo hidden e um role=\"status\" de carregamento, para que nada da área protegida apareça antes da checagem de sessão. Os dados do usuário ficam numa lista de definição (dl/dt/dd)."
+    },
+    {
+      "id": "file:Codigo/css/style.css",
+      "type": "file",
+      "name": "style.css",
+      "filePath": "Codigo/css/style.css",
+      "summary": "Folha de estilo única das três páginas (login, cadastro e área restrita): define tokens de cor, gradiente e tipografia em :root, o layout de cartão flutuante sobre fundo em gradiente com formas decorativas, formulários com erros acessíveis, botões com indicador de carregando e uma versão compacta para janelas baixas.",
+      "tags": [
+        "estilos",
+        "tokens-de-design",
+        "acessibilidade",
+        "layout",
+        "markup"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Escala tudo pela altura da janela com font-size: clamp(0.875rem, 0.5rem + 1svh, 1.125rem) e media queries por max-height (640px e 520px) em vez de largura; usa :user-invalid para mostrar erros só após interação, @keyframes para o spinner e prefers-reduced-motion para desligar animações."
+    },
+    {
+      "id": "file:Codigo/firestore.rules",
+      "type": "file",
+      "name": "firestore.rules",
+      "filePath": "Codigo/firestore.rules",
+      "summary": "Regras de segurança do Cloud Firestore para as coleções usuarios e acessos: liberam sem login apenas a consulta de e-mail duplicado com limit(1), restringem leitura e criação ao próprio documento do usuário, permitem atualizar só o ultimoAcesso e deixam o histórico de acessos apenas para gravação.",
+      "tags": [
+        "seguranca",
+        "firestore",
+        "controle-de-acesso",
+        "validacao",
+        "configuration"
+      ],
+      "complexity": "simple",
+      "languageNotes": "Linguagem Firebase Security Rules (rules_version 2): separa list de get para tratar consulta e leitura individual de forma distinta, usa request.query.limit para limitar a consulta pública e request.resource.data.diff(resource.data).affectedKeys().hasOnly([...]) para permitir que só campos específicos mudem."
+    },
+    {
+      "id": "document:Docs/Projplan.md",
+      "type": "document",
+      "name": "Projplan.md",
+      "filePath": "Docs/Projplan.md",
+      "summary": "Planejamento principal do CampusAuth dividido em 9 áreas de trabalho com checklists, notas por requisito, fluxo do usuário em Mermaid, modelo das coleções usuarios e acessos, estrutura de pastas, regras de segurança planejadas, plano de testes e pontos em aberto.",
+      "tags": [
+        "documentation",
+        "planejamento",
+        "requisitos",
+        "checklist",
+        "arquitetura"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Usa um diagrama Mermaid flowchart para descrever a navegação entre index.html, cadastro.html e restrita.html."
+    },
+    {
+      "id": "document:README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "README.md",
+      "summary": "Visão geral do projeto com a tabela de requisitos e onde cada um está implementado, tecnologias, estrutura de pastas, instruções para rodar com npm run dev, troca de projeto Firebase, modelo do banco, resumo das regras de segurança e decisões de interface.",
+      "tags": [
+        "documentation",
+        "entry-point",
+        "visao-geral",
+        "como-rodar",
+        "firebase"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:package.json",
+      "type": "config",
+      "name": "package.json",
+      "filePath": "package.json",
+      "summary": "Manifesto npm privado do campusauth que declara o live-server como devDependency e o script dev, que serve a pasta Codigo/ em localhost:5500 abrindo index.html com recarga automática.",
+      "tags": [
+        "configuration",
+        "build-system",
+        "servidor-local",
+        "npm-scripts"
+      ],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:Codigo/js/cadastro.js",
+      "target": "file:Codigo/js/db.js",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:Codigo/js/cadastro.js",
+      "target": "file:Codigo/js/erros.js",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:Codigo/js/cadastro.js",
+      "target": "file:Codigo/js/firebase-config.js",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:Codigo/js/cadastro.js",
+      "target": "file:Codigo/js/formulario.js",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:Codigo/js/cadastro.js",
+      "target": "file:Codigo/js/sessao.js",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:Codigo/js/login.js",
+      "target": "file:Codigo/js/db.js",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:Codigo/js/login.js",
+      "target": "file:Codigo/js/erros.js",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:Codigo/js/login.js",
+      "target": "file:Codigo/js/firebase-config.js",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:Codigo/js/login.js",
+      "target": "file:Codigo/js/formulario.js",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:Codigo/js/login.js",
+      "target": "file:Codigo/js/sessao.js",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:Codigo/js/sessao.js",
+      "target": "file:Codigo/js/firebase-config.js",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:Codigo/js/erros.js",
+      "target": "function:Codigo/js/erros.js:mensagemDeErro",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:Codigo/js/formulario.js",
+      "target": "function:Codigo/js/formulario.js:sincronizarErros",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:Codigo/js/formulario.js",
+      "target": "function:Codigo/js/formulario.js:ativarMostrarSenha",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:Codigo/js/formulario.js",
+      "target": "function:Codigo/js/formulario.js:definirCarregando",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:Codigo/js/sessao.js",
+      "target": "function:Codigo/js/sessao.js:redirecionarSeLogado",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:Codigo/js/erros.js",
+      "target": "function:Codigo/js/erros.js:mensagemDeErro",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:Codigo/js/formulario.js",
+      "target": "function:Codigo/js/formulario.js:sincronizarErros",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:Codigo/js/formulario.js",
+      "target": "function:Codigo/js/formulario.js:ativarMostrarSenha",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:Codigo/js/formulario.js",
+      "target": "function:Codigo/js/formulario.js:definirCarregando",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:Codigo/js/sessao.js",
+      "target": "function:Codigo/js/sessao.js:redirecionarSeLogado",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:Codigo/js/cadastro.js",
+      "target": "function:Codigo/js/db.js:normalizarEmail",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:Codigo/js/cadastro.js",
+      "target": "function:Codigo/js/db.js:emailJaCadastrado",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:Codigo/js/cadastro.js",
+      "target": "function:Codigo/js/db.js:salvarUsuario",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:Codigo/js/cadastro.js",
+      "target": "function:Codigo/js/db.js:registrarAcesso",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:Codigo/js/cadastro.js",
+      "target": "function:Codigo/js/erros.js:mensagemDeErro",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:Codigo/js/cadastro.js",
+      "target": "function:Codigo/js/formulario.js:sincronizarErros",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:Codigo/js/cadastro.js",
+      "target": "function:Codigo/js/formulario.js:ativarMostrarSenha",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:Codigo/js/cadastro.js",
+      "target": "function:Codigo/js/formulario.js:definirCarregando",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:Codigo/js/cadastro.js",
+      "target": "function:Codigo/js/sessao.js:redirecionarSeLogado",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:Codigo/js/login.js",
+      "target": "function:Codigo/js/db.js:normalizarEmail",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:Codigo/js/login.js",
+      "target": "function:Codigo/js/db.js:salvarUsuario",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:Codigo/js/login.js",
+      "target": "function:Codigo/js/db.js:registrarAcesso",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:Codigo/js/login.js",
+      "target": "function:Codigo/js/erros.js:mensagemDeErro",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:Codigo/js/login.js",
+      "target": "function:Codigo/js/formulario.js:sincronizarErros",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:Codigo/js/login.js",
+      "target": "function:Codigo/js/formulario.js:ativarMostrarSenha",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:Codigo/js/login.js",
+      "target": "function:Codigo/js/formulario.js:definirCarregando",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:Codigo/js/login.js",
+      "target": "function:Codigo/js/sessao.js:redirecionarSeLogado",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:Codigo/js/db.js",
+      "target": "file:Codigo/js/firebase-config.js",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:Codigo/js/restrita.js",
+      "target": "file:Codigo/js/db.js",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:Codigo/js/restrita.js",
+      "target": "file:Codigo/js/firebase-config.js",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:Codigo/js/restrita.js",
+      "target": "file:Codigo/js/formulario.js",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:Codigo/js/db.js",
+      "target": "function:Codigo/js/db.js:normalizarEmail",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:Codigo/js/db.js",
+      "target": "function:Codigo/js/db.js:emailJaCadastrado",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:Codigo/js/db.js",
+      "target": "function:Codigo/js/db.js:buscarUsuario",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:Codigo/js/db.js",
+      "target": "function:Codigo/js/db.js:salvarUsuario",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:Codigo/js/db.js",
+      "target": "function:Codigo/js/db.js:registrarAcesso",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:Codigo/js/db.js",
+      "target": "function:Codigo/js/db.js:normalizarEmail",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:Codigo/js/db.js",
+      "target": "function:Codigo/js/db.js:emailJaCadastrado",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:Codigo/js/db.js",
+      "target": "function:Codigo/js/db.js:buscarUsuario",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:Codigo/js/db.js",
+      "target": "function:Codigo/js/db.js:salvarUsuario",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:Codigo/js/db.js",
+      "target": "function:Codigo/js/db.js:registrarAcesso",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:Codigo/js/db.js:emailJaCadastrado",
+      "target": "function:Codigo/js/db.js:normalizarEmail",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:Codigo/js/db.js:salvarUsuario",
+      "target": "function:Codigo/js/db.js:normalizarEmail",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:Codigo/js/restrita.js",
+      "target": "function:Codigo/js/db.js:buscarUsuario",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:Codigo/js/restrita.js",
+      "target": "function:Codigo/js/formulario.js:definirCarregando",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:Codigo/cadastro.html",
+      "target": "file:Codigo/js/cadastro.js",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:Codigo/cadastro.html",
+      "target": "file:Codigo/css/style.css",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:Codigo/cadastro.html",
+      "target": "file:Codigo/index.html",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:Codigo/index.html",
+      "target": "file:Codigo/js/login.js",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:Codigo/index.html",
+      "target": "file:Codigo/css/style.css",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:Codigo/index.html",
+      "target": "file:Codigo/cadastro.html",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:Codigo/restrita.html",
+      "target": "file:Codigo/js/restrita.js",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:Codigo/restrita.html",
+      "target": "file:Codigo/css/style.css",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:Codigo/firestore.rules",
+      "target": "file:Codigo/js/db.js",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:package.json",
+      "target": "file:Codigo/index.html",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:Codigo/js/login.js",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:Codigo/js/cadastro.js",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:Codigo/js/db.js",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:Codigo/js/restrita.js",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:Codigo/js/firebase-config.js",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:Codigo/js/erros.js",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:Codigo/js/formulario.js",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:Codigo/js/sessao.js",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:Codigo/index.html",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:Codigo/cadastro.html",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:Codigo/restrita.html",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:Codigo/firestore.rules",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:Codigo/css/style.css",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "config:package.json",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "document:Docs/Projplan.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:Docs/Projplan.md",
+      "target": "file:Codigo/js/firebase-config.js",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:Docs/Projplan.md",
+      "target": "file:Codigo/js/db.js",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:Docs/Projplan.md",
+      "target": "file:Codigo/js/erros.js",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:Docs/Projplan.md",
+      "target": "file:Codigo/js/formulario.js",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:Docs/Projplan.md",
+      "target": "file:Codigo/js/sessao.js",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:Docs/Projplan.md",
+      "target": "file:Codigo/js/login.js",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:Docs/Projplan.md",
+      "target": "file:Codigo/js/cadastro.js",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:Docs/Projplan.md",
+      "target": "file:Codigo/js/restrita.js",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:Docs/Projplan.md",
+      "target": "file:Codigo/index.html",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:Docs/Projplan.md",
+      "target": "file:Codigo/cadastro.html",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:Docs/Projplan.md",
+      "target": "file:Codigo/restrita.html",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:Docs/Projplan.md",
+      "target": "file:Codigo/firestore.rules",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:Docs/Projplan.md",
+      "target": "file:Codigo/css/style.css",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:Docs/Projplan.md",
+      "target": "config:package.json",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ],
+  "layers": [
+    {
+      "id": "layer:ui",
+      "name": "Interface (Páginas e Estilos)",
+      "description": "Páginas HTML de login, cadastro e área restrita, mais a folha de estilo única com o cartão flutuante sobre fundo em gradiente; cada página carrega o style.css e o script controlador correspondente.",
+      "nodeIds": [
+        "file:Codigo/index.html",
+        "file:Codigo/cadastro.html",
+        "file:Codigo/restrita.html",
+        "file:Codigo/css/style.css"
+      ]
+    },
+    {
+      "id": "layer:controller",
+      "name": "Controladores de Página",
+      "description": "Scripts de entrada de cada página (login.js, cadastro.js, restrita.js): fazem a autenticação no Firebase, a checagem de e-mail duplicado e a proteção por onAuthStateChanged, e combinam os helpers compartilhados com a camada de dados.",
+      "nodeIds": [
+        "file:Codigo/js/login.js",
+        "file:Codigo/js/cadastro.js",
+        "file:Codigo/js/restrita.js"
+      ]
+    },
+    {
+      "id": "layer:utility",
+      "name": "Utilitários Compartilhados",
+      "description": "Helpers reutilizados pelos controladores: comportamento acessível dos formulários e estado de carregamento, tradução dos códigos de erro do Firebase para português e redirecionamento de quem já tem sessão ativa.",
+      "nodeIds": [
+        "file:Codigo/js/formulario.js",
+        "file:Codigo/js/erros.js",
+        "file:Codigo/js/sessao.js"
+      ]
+    },
+    {
+      "id": "layer:data",
+      "name": "Firebase e Acesso a Dados",
+      "description": "Inicialização única do Firebase (auth e db), operações do Firestore sobre as coleções usuarios e acessos, e as regras de segurança que limitam o que cada usuário pode ler e gravar nessas coleções.",
+      "nodeIds": [
+        "file:Codigo/js/firebase-config.js",
+        "file:Codigo/js/db.js",
+        "file:Codigo/firestore.rules"
+      ]
+    },
+    {
+      "id": "layer:project",
+      "name": "Documentação e Configuração do Projeto",
+      "description": "README com requisitos e instruções de execução, o planejamento em Docs/Projplan.md e o package.json que serve a pasta Codigo/ com live-server no script dev.",
+      "nodeIds": [
+        "document:README.md",
+        "document:Docs/Projplan.md",
+        "config:package.json"
+      ]
+    }
+  ],
+  "tour": [
+    {
+      "order": 1,
+      "title": "Visão geral do CampusAuth",
+      "description": "Comece pelo README.md, que apresenta o CampusAuth como a área restrita de um sistema acadêmico, feita para a atividade prática de Controle de Acesso e Cadastro de Usuários com Firebase. A tabela de requisitos liga cada item (login com Google, cadastro, e-mail duplicado, página protegida, dados do usuário, logout e o bônus de histórico de acessos) ao arquivo que o implementa, e serve de mapa para todo o tour. O projeto usa HTML, CSS e JavaScript com ES modules, sem framework, e o Firebase JS SDK 12 modular carregado por CDN. O Docs/Projplan.md complementa com o planejamento em 9 áreas de trabalho, o fluxo do usuário em Mermaid, o modelo das coleções e o plano de testes.",
+      "nodeIds": [
+        "document:README.md",
+        "document:Docs/Projplan.md"
+      ]
+    },
+    {
+      "order": 2,
+      "title": "Rodando o projeto localmente",
+      "description": "O package.json é um manifesto npm privado que declara o live-server como devDependency. O script dev serve a pasta Codigo/ em localhost:5500 e abre o index.html com recarga automática, então `npm install` seguido de `npm run dev` basta para ver o app no navegador. Como não há framework e o Firebase vem por CDN, o navegador recebe os arquivos da pasta Codigo/ exatamente como estão no repositório.",
+      "nodeIds": [
+        "config:package.json"
+      ],
+      "languageLesson": "Scripts com type=\"module\" (ES modules) são bloqueados pelo navegador quando a página é aberta direto do disco (file://), por causa das regras de CORS. Por isso um servidor local como o live-server é necessário mesmo num projeto feito só com HTML, CSS e JavaScript."
+    },
+    {
+      "order": 3,
+      "title": "Conexão com o Firebase",
+      "description": "Antes de qualquer tela, vale entender o firebase-config.js, o arquivo mais importado do projeto: login.js, cadastro.js, restrita.js, db.js e sessao.js dependem dele. Ele inicializa o app Firebase uma única vez com as credenciais públicas do projeto e exporta três instâncias compartilhadas: app, auth (Firebase Authentication) e db (Cloud Firestore). Com a configuração concentrada aqui, trocar de projeto Firebase, como o README explica, exige mexer em um só arquivo.",
+      "nodeIds": [
+        "file:Codigo/js/firebase-config.js"
+      ],
+      "languageLesson": "Um ES module é avaliado uma única vez por página, não importa quantos arquivos o importem. Assim, quando login.js e db.js importam auth ou db de firebase-config.js, todos recebem as mesmas instâncias, o que funciona como um singleton natural sem nenhum código extra."
+    },
+    {
+      "order": 4,
+      "title": "A tela de login",
+      "description": "O index.html é a página que o npm run dev abre: a tela de login, com o botão \"Entrar com Google\" e um formulário de e-mail e senha. A página quase não tem lógica; ela carrega o módulo js/login.js, que veremos a seguir, e a folha de estilo style.css. Essa folha é única para as três páginas (login, cadastro e área restrita) e define o visual de cartão flutuante sobre fundo em gradiente com formas decorativas, os tokens de cor e tipografia em :root, botões com indicador de carregando e uma versão compacta para janelas baixas.",
+      "nodeIds": [
+        "file:Codigo/index.html",
+        "file:Codigo/css/style.css"
+      ],
+      "languageLesson": "Os tokens em :root são CSS custom properties (variáveis CSS), declaradas uma vez no seletor :root e lidas em qualquer regra com var(--nome). Como as três páginas compartilham o mesmo style.css, mudar um token altera o visual do app inteiro de uma vez."
+    },
+    {
+      "order": 5,
+      "title": "Login com Google e e-mail",
+      "description": "Aqui começa o caminho do usuário. O login.js usa a instância auth do Passo 3 para oferecer duas formas de entrar: com Google, via signInWithPopup com o parâmetro select_account, e com e-mail e senha, para quem já se cadastrou. Nos dois casos o fluxo termina igual: garante o usuário no Firestore (salvarUsuario, de db.js), registra o acesso no histórico (registrarAcesso) e redireciona para restrita.html. Enquanto um login está em andamento, os dois botões ficam bloqueados, o que evita cliques duplos e tentativas simultâneas.",
+      "nodeIds": [
+        "file:Codigo/js/login.js"
+      ],
+      "languageLesson": "O parâmetro select_account, passado ao GoogleAuthProvider com setCustomParameters, faz o Google mostrar o seletor de contas mesmo quando já há uma conta logada no navegador. As chamadas ao Firebase retornam Promises, e o padrão async/await com try/catch permite tratar sucesso e erro de forma linear, como se fosse código síncrono."
+    },
+    {
+      "order": 6,
+      "title": "Helpers compartilhados dos formulários",
+      "description": "Login e cadastro compartilham três utilitários que ficam fora dos controladores. O formulario.js sincroniza aria-invalid com o estado :user-invalid dos campos, liga os botões de mostrar/ocultar senha e controla o estado de carregamento dos botões de envio (sincronizarErros, ativarMostrarSenha e definirCarregando). O erros.js traduz códigos do Firebase, como auth/invalid-credential e permission-denied, para mensagens em português, e o sessao.js manda direto para a área restrita quem já está autenticado ao abrir o login ou o cadastro. Separar esses helpers evita duplicar código entre login.js e cadastro.js.",
+      "nodeIds": [
+        "file:Codigo/js/formulario.js",
+        "file:Codigo/js/erros.js",
+        "file:Codigo/js/sessao.js"
+      ],
+      "languageLesson": ":user-invalid é uma pseudo-classe CSS recente que só marca um campo como inválido depois que o usuário interage com ele, ao contrário de :invalid, que já aparece com a página recém-aberta. Como leitores de tela não enxergam o CSS, o atributo aria-invalid=\"true\" comunica o mesmo estado às tecnologias assistivas, e por isso o formulario.js mantém os dois sincronizados."
+    },
+    {
+      "order": 7,
+      "title": "Cadastro e e-mail duplicado",
+      "description": "Quem ainda não tem conta vai do login para o cadastro.html, um formulário de nome, e-mail e senha (mínimo de 6 caracteres) que reaproveita os helpers do Passo 6. No submit, o cadastro.js normaliza o e-mail e consulta a coleção usuarios no Firestore (emailJaCadastrado, de db.js); se o e-mail já existe, mostra o alerta \"Este e-mail já está cadastrado.\" e não grava nada. Só então cria a conta com createUserWithEmailAndPassword, salva o nome com updateProfile, grava o documento do usuário, registra o acesso e redireciona para restrita.html. Como reforço, o erro auth/email-already-in-use é tratado para contas que existem só no Authentication, sem documento no Firestore.",
+      "nodeIds": [
+        "file:Codigo/cadastro.html",
+        "file:Codigo/js/cadastro.js"
+      ],
+      "languageLesson": "Firebase Authentication e Cloud Firestore são serviços separados: o Authentication guarda as credenciais e o Firestore guarda os documentos da aplicação. Os dois podem ficar fora de sincronia, por isso o cadastro confere os dois lados, primeiro com a consulta no Firestore e depois capturando o código de erro do próprio Authentication."
+    },
+    {
+      "order": 8,
+      "title": "A página protegida",
+      "description": "Depois do login ou do cadastro, o usuário chega à restrita.html. A página começa mostrando \"Verificando sua sessão...\" com o conteúdo escondido pelo atributo hidden, e o restrita.js só o revela quando o onAuthStateChanged confirma que há um usuário; sem sessão, redireciona para o login. Com o usuário confirmado, o script complementa os dados do Auth com o documento do Firestore (buscarUsuario, de db.js) e preenche as boas-vindas, o e-mail, o avatar com iniciais, a forma de login e o último acesso.",
+      "nodeIds": [
+        "file:Codigo/restrita.html",
+        "file:Codigo/js/restrita.js"
+      ],
+      "languageLesson": "onAuthStateChanged registra um observer que o Firebase chama assim que descobre o estado da sessão, o que pode levar alguns instantes enquanto uma sessão salva é restaurada. Esconder o conteúdo com hidden até essa resposta evita que a página protegida apareça na tela antes de o Firebase decidir entre mostrá-la ou redirecionar para o login."
+    },
+    {
+      "order": 9,
+      "title": "Logout e fim da sessão",
+      "description": "O último passo do caminho do usuário é o botão Sair, também tratado pelo restrita.js. Ele chama signOut() do Firebase Authentication e leva o usuário de volta à tela de login do Passo 4. Com a sessão encerrada, o sessao.js do Passo 6 deixa de redirecionar quem abre o login, e o onAuthStateChanged do Passo 8 passa a barrar o acesso direto à restrita.html. Repare ainda que o restrita.js importa o formulario.js e chama definirCarregando, reaproveitando nesta página o mesmo helper de estado de carregamento.",
+      "nodeIds": [
+        "file:Codigo/js/restrita.js"
+      ]
+    },
+    {
+      "order": 10,
+      "title": "Camada de dados no Firestore",
+      "description": "Depois de percorrer o caminho completo, vale olhar a camada que os três controladores usam para falar com o banco. O db.js, segundo arquivo mais importado do projeto, concentra as operações sobre duas coleções do Cloud Firestore: usuarios, com um documento por pessoa, e acessos, o histórico de logins. Ele exporta normalizarEmail, emailJaCadastrado, buscarUsuario, salvarUsuario e registrarAcesso, e tanto a checagem de duplicidade quanto a gravação passam pelo normalizarEmail, para que o mesmo e-mail seja sempre comparado do mesmo jeito. O bônus da atividade também está aqui: a cada login, registrarAcesso grava { nome, email, ultimoAcesso: new Date() } em acessos e o último acesso do usuário é atualizado.",
+      "nodeIds": [
+        "file:Codigo/js/db.js"
+      ],
+      "languageLesson": "No SDK modular do Firebase (v9 em diante, incluindo o 12 usado aqui), cada operação do Firestore é uma função importada individualmente, como doc, getDoc, setDoc, addDoc, query, where e limit, que recebe a instância db ou uma referência como argumento. Esse estilo substitui o antigo encadeamento firebase.firestore().collection(...) e deixa claro, já no import, quais recursos cada arquivo usa."
+    },
+    {
+      "order": 11,
+      "title": "Regras de segurança do Firestore",
+      "description": "Como as credenciais do firebase-config.js são públicas, quem realmente decide o que cada cliente pode ler e gravar nas coleções usuarios e acessos é o firestore.rules. Sem login, a única operação liberada é a consulta de e-mail duplicado com limit(1), a mesma que o cadastro.js faz antes de criar a conta no Passo 7. Usuários autenticados só leem e criam o próprio documento e só podem atualizar o campo ultimoAcesso. O histórico de acessos é apenas para gravação, então ninguém consegue ler os logins dos outros.",
+      "nodeIds": [
+        "file:Codigo/firestore.rules"
+      ],
+      "languageLesson": "Regras do Firestore usam blocos match para caminhos (como /usuarios/{id}) e allow para cada operação (read, get, list, create, update, delete), com condições sobre request.auth, request.resource e request.query. Padrões comuns: comparar request.auth.uid com o id do documento para limitar ao dono, checar request.query.limit para restringir consultas e usar request.resource.data.diff(resource.data).affectedKeys().hasOnly([...]) para permitir alterar só campos específicos."
+    }
+  ]
+}
