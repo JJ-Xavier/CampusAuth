@@ -3,15 +3,63 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CampusAuth – Área restrita</title>
+  <title>Área restrita · CampusAuth</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
-  <!-- Estrutura provisória: o visual do canvas entra na Área 5. -->
-  <main id="conteudo" hidden>
-    <h1>Bem-vindo(a), <span id="nome"></span></h1>
-    <p>E-mail: <span id="email"></span></p>
-    <button id="btn-sair" type="button">Sair</button>
-  </main>
+<body class="pagina-restrita">
+  <p id="carregando" class="carregando" role="status">Verificando sua sessão...</p>
+
+  <!-- Só aparece depois que o onAuthStateChanged confirma o usuário (Requisito 4). -->
+  <div id="conteudo" hidden>
+    <header class="topo">
+      <a class="marca" href="restrita.html"><span class="marca__icone" aria-hidden="true">C</span>CampusAuth</a>
+      <div class="usuario">
+        <span id="avatar" class="avatar" aria-hidden="true"></span>
+        <div class="usuario__dados">
+          <span id="topo-nome" class="usuario__nome"></span>
+          <span id="topo-email" class="usuario__email"></span>
+        </div>
+        <button id="btn-sair" class="botao botao--secundario" type="button">Sair</button>
+      </div>
+    </header>
+
+    <main class="painel">
+      <section class="boas-vindas" aria-labelledby="titulo">
+        <span class="boas-vindas__forma boas-vindas__forma--ciano" aria-hidden="true"></span>
+        <span class="boas-vindas__forma boas-vindas__forma--violeta" aria-hidden="true"></span>
+        <span class="boas-vindas__forma boas-vindas__forma--vidro" aria-hidden="true"></span>
+
+        <span class="boas-vindas__selo">Área restrita</span>
+        <h1 id="titulo">Bem-vindo(a), <span id="nome"></span></h1>
+        <p>Você entrou como <span id="email"></span></p>
+      </section>
+
+      <section aria-labelledby="dados-titulo">
+        <h2 id="dados-titulo" class="visualmente-oculto">Seus dados</h2>
+        <dl class="dados">
+          <div class="dado">
+            <dt>Nome</dt>
+            <dd id="dado-nome"></dd>
+          </div>
+          <div class="dado">
+            <dt>E-mail</dt>
+            <dd id="dado-email"></dd>
+          </div>
+          <div class="dado">
+            <dt>Forma de login</dt>
+            <dd id="dado-provedor"></dd>
+          </div>
+          <div class="dado">
+            <dt>Último acesso</dt>
+            <dd id="dado-acesso"></dd>
+          </div>
+        </dl>
+      </section>
+    </main>
+  </div>
 
   <script type="module" src="./js/restrita.js"></script>
 </body>

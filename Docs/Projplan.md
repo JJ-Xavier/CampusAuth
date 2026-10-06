@@ -143,6 +143,9 @@ Codigo/
 ├── js/
 │   ├── firebase-config.js
 │   ├── db.js
+│   ├── erros.js          # mensagens de erro do Firebase em português
+│   ├── formulario.js     # mostrar senha, carregando, aria-invalid
+│   ├── sessao.js         # quem já está logado vai direto para a área restrita
 │   ├── login.js
 │   ├── cadastro.js
 │   └── restrita.js
@@ -152,7 +155,13 @@ Codigo/
 - [x] Scripts carregados com `<script type="module">`
 - [x] Formulários com `required`, `type="email"` e `minlength="6"` na senha (mínimo do Firebase)
 - [x] Mensagens de erro em português na tela (senha fraca, e-mail inválido, senha incorreta), centralizadas em `js/erros.js`
-- [ ] Layout simples e responsivo: um card centralizado por página
+- [x] Visual do canvas "CampusAuth – Páginas": fundo em gradiente com formas, cartão branco flutuando, título grande em Outfit, texto em Plus Jakarta Sans
+- [x] Só versão para computador: as regras não pedem celular, então o layout de celular foi removido
+- [x] Cada tela ocupa a janela inteira sem rolagem: tamanho base `clamp(0.875rem, 0.5rem + 1svh, 1.125rem)` (entre 14px e 18px, acompanhando a altura da tela) e espaçamentos em `rem`. Abaixo de 640px de altura (zoom, F12 aberto, barra de favoritos) entra uma versão compacta: logo na coluna da direita, campos mais justos e, abaixo de 520px, texto de 13px. Medido sem rolagem de 1920×950 até 1366×420, inclusive com erros e mensagens na tela
+- [x] Erro do campo na linha do rótulo e mensagem do Firebase no lugar do subtítulo, para a tela não pular quando aparecem
+- [x] Erros nos campos só depois da interação (`:user-invalid`), com `aria-invalid` sincronizado
+- [x] Botão Mostrar/Ocultar senha, `autocomplete` certo (`username`, `current-password`, `new-password`) e indicador de carregando nos botões
+- [ ] Testar no navegador: telas, erros dos campos e fluxo completo
 
 ## Área 6 – Cadastro com e-mail/senha e e-mail duplicado (Req 2 · 0,20 e Req 3 · 0,25)
 
@@ -177,9 +186,9 @@ A verificação de duplicado roda **antes** de criar a conta e de gravar qualque
 
 - [x] Conteúdo começa escondido; sem usuário → `window.location.replace("index.html")`
 - [x] Com usuário: mostrar **Bem-vindo(a), {nome}** e o e-mail
-- [ ] Nome vem de `user.displayName`; se estiver vazio, buscar em `usuarios/{uid}`
+- [x] Nome vem de `user.displayName`; se estiver vazio, buscar em `usuarios/{uid}`
 - [x] Botão **Sair**: `signOut(auth)` e depois redirecionar para `index.html`
-- [ ] Em `index.html`, se o usuário já estiver logado, mandar direto para a área restrita
+- [x] Em `index.html` (e em `cadastro.html`), se o usuário já estiver logado, mandar direto para a área restrita
 
 ## Área 8 – Segurança e configuração
 

@@ -28,6 +28,11 @@ export async function emailJaCadastrado(email) {
   return !resultado.empty;
 }
 
+export async function buscarUsuario(uid) {
+  const documento = await getDoc(doc(db, "usuarios", uid));
+  return documento.exists() ? documento.data() : null;
+}
+
 // Cria `usuarios/{uid}` só se ainda não existir, para não sobrescrever `criadoEm` a cada login com Google.
 export async function salvarUsuario(usuario, { nome, provedor }) {
   const referencia = doc(db, "usuarios", usuario.uid);

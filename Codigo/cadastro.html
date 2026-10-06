@@ -3,30 +3,86 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CampusAuth – Criar conta</title>
+  <title>Criar conta · CampusAuth</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
-  <!-- Estrutura provisória: o visual do canvas entra na Área 5. -->
-  <main>
-    <h1>Criar conta</h1>
+<body class="pagina-entrada">
+  <div class="fundo" aria-hidden="true">
+    <span class="fundo__forma fundo__forma--ciano"></span>
+    <span class="fundo__forma fundo__forma--violeta"></span>
+    <span class="fundo__forma fundo__forma--azul"></span>
+    <span class="fundo__forma fundo__forma--vidro"></span>
+    <span class="fundo__forma fundo__forma--anel"></span>
+  </div>
 
-    <form id="form-cadastro">
-      <label for="nome">Nome</label>
-      <input id="nome" name="nome" type="text" autocomplete="name" required>
+  <div class="entrada">
+    <header class="entrada__topo">
+      <a class="marca" href="index.html"><span class="marca__icone" aria-hidden="true">C</span>CampusAuth</a>
+    </header>
 
-      <label for="email">E-mail</label>
-      <input id="email" name="email" type="email" autocomplete="email" required>
+    <main class="cartao">
+      <h1>Criar conta</h1>
+      <p id="mensagem" class="mensagem" role="alert"></p>
+      <p class="cartao__subtitulo">Todos os campos são obrigatórios.</p>
 
-      <label for="senha">Senha</label>
-      <span id="senha-dica">Mínimo de 6 caracteres.</span>
-      <input id="senha" name="senha" type="password" autocomplete="new-password" minlength="6" required aria-describedby="senha-dica">
+      <div class="cartao__corpo">
+        <form id="form-cadastro" class="formulario">
+          <div class="campo">
+            <div class="campo__topo">
+              <label for="nome">Nome</label>
+              <span id="nome-erro" class="campo__erro">Digite seu nome</span>
+            </div>
+            <input id="nome" name="nome" type="text" autocomplete="name" placeholder="Seu nome completo"
+                   enterkeyhint="next" required pattern=".*\S.*" aria-errormessage="nome-erro">
+          </div>
 
-      <button id="btn-cadastrar" type="submit">Criar conta</button>
-    </form>
+          <div class="campo">
+            <div class="campo__topo">
+              <label for="email">E-mail</label>
+              <span id="email-erro" class="campo__erro">E-mail inválido</span>
+            </div>
+            <input id="email" name="email" type="email" autocomplete="username" placeholder="nome@exemplo.com"
+                   enterkeyhint="next" required aria-errormessage="email-erro">
+          </div>
 
-    <p id="mensagem" role="status" aria-live="polite"></p>
-    <p>Já tem conta? <a href="index.html">Entrar</a></p>
-  </main>
+          <div class="campo">
+            <div class="campo__topo">
+              <label for="new-password">Senha</label>
+              <span id="senha-erro" class="campo__erro">Senha muito curta</span>
+            </div>
+            <span id="senha-dica" class="campo__dica">Mínimo de 6 caracteres.</span>
+            <div class="campo__senha">
+              <input id="new-password" name="senha" type="password" autocomplete="new-password" minlength="6"
+                     enterkeyhint="done" required aria-describedby="senha-dica" aria-errormessage="senha-erro">
+              <button class="botao-senha" type="button" data-mostrar-senha aria-controls="new-password" aria-label="Mostrar senha">Mostrar</button>
+            </div>
+          </div>
+
+          <button id="btn-cadastrar" class="botao botao--primario" type="submit">Criar conta</button>
+        </form>
+      </div>
+
+      <p class="cartao__rodape">Já tem conta? <a href="index.html">Entrar</a></p>
+    </main>
+
+    <aside class="chamada" aria-label="Sobre o cadastro">
+      <p class="chamada__titulo">
+        <span>Um e-mail,</span>
+        <span class="destaque">uma conta.</span>
+      </p>
+      <p class="chamada__texto">Cada e-mail só pode ser cadastrado uma vez. Se você já tem conta, é só entrar.</p>
+      <div class="selo">
+        <span class="selo__icone" aria-hidden="true"></span>
+        <div>
+          <strong>Acesso na hora</strong>
+          <span>A conta criada já abre a área restrita.</span>
+        </div>
+      </div>
+    </aside>
+  </div>
 
   <script type="module" src="./js/cadastro.js"></script>
 </body>
