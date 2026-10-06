@@ -193,10 +193,13 @@ A verificação de duplicado roda **antes** de criar a conta e de gravar qualque
 ## Área 8 – Segurança e configuração
 
 - [x] Conferir em Authentication → Settings → Authorized domains que `localhost` (e o domínio de hospedagem, se houver) está na lista
-- [ ] Trocar o modo de teste por regras em `firestore.rules`:
-    - `usuarios/{uid}`: gravação só pelo próprio `uid`
-    - `acessos`: criação só por usuário autenticado; leitura restrita
-    - Leitura de `usuarios` por e-mail: a checagem de duplicado roda **antes** do login, então precisa de leitura sem autenticação. Ver pontos em aberto.
+- [x] Escrever as regras em `Codigo/firestore.rules`:
+    - `usuarios`: qualquer pessoa só pode fazer a consulta por e-mail com no máximo 1 resultado (checagem de duplicado antes do login)
+    - `usuarios/{uid}`: leitura só pelo próprio usuário; criação com o próprio e-mail e só os campos esperados; nos logins seguintes, só o `ultimoAcesso` muda; ninguém apaga
+    - `acessos`: criação só pelo usuário logado, com o próprio e-mail; ninguém lê, altera ou apaga pelo site
+- [x] Publicar as regras no Console (Firestore Database → Regras) no lugar do modo de teste
+- [x] Conferir pela API, sem login: a consulta por e-mail com limit 1 funciona; consulta sem limit, listar usuários, ler documento de outro usuário, ler acessos, gravar acesso falso e alterar usuário são bloqueados
+- [ ] Testar o fluxo completo no navegador com as regras novas (login com Google, cadastro, e-mail duplicado, login com e-mail, sair)
 
 ## Área 9 – Testes, organização e entrega
 
@@ -208,13 +211,13 @@ Um teste por critério de avaliação, feito no navegador antes da entrega.
 - [x] **Página protegida (0,25):** abrir `restrita.html` sem login (aba anônima) redireciona para o login
 - [x] **Dados do usuário (0,20):** aparece "Bem-vindo(a), nome" e o e-mail, tanto com Google quanto com e-mail/senha
 - [ ] **Logout (0,20):** Sair volta para o login, e voltar pelo navegador não reabre a área restrita
-- [ ] **Organização (0,20):** pastas como na Área 5, código comentado onde não for óbvio, README com como rodar
+- [x] **Organização (0,20):** pastas como na Área 5, código comentado onde não for óbvio, README com como rodar, requisitos, banco e regras
 - [x] **Bônus (+0,5):** cada login gera um documento em `acessos` com `nome`, `email` e `ultimoAcesso`
 
 ## Pontos em aberto
 
 - [ ] **Projeto base da aula:** o documento pede para partir dele. Se existir, colocar em `Codigo/` e adaptar este plano à estrutura dele.
 - [x] **Projeto Firebase:** reaproveitado o `cadastro-6866c` da aula, com os dados antigos apagados.
-- [ ] **Leitura sem login para checar duplicado:** aceitar (mais simples, é o que o enunciado pede) ou criar uma coleção só de e-mails com leitura pública limitada?
+- [x] **Leitura sem login para checar duplicado:** decidido liberar só a consulta por e-mail com `limit(1)` em `usuarios` (o que o enunciado descreve); o resto do banco fica protegido.
 - [x] **Login por e-mail/senha na tela inicial:** o enunciado só pede cadastro, mas sem ele quem se cadastrou não consegue entrar de novo depois do logout. Plano atual: incluir.
 - [ ] **Hospedagem:** entregar rodando local ou publicar no Firebase Hosting?

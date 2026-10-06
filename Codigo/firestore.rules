@@ -1,0 +1,43 @@
+rules_version = '2';
+
+// Regras do Firestore do CampusAuth.
+// Para publicar: Console do Firebase → Firestore Database → Regras → colar este arquivo → Publicar.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // usuarios/{uid}: um documento por pessoa (nome, email, provedor, criadoEm, ultimoAcesso).
+    match /usuarios/{uid} {
+      // Requisito 3: a checagem de e-mail duplicado roda antes do login, sem usuário autenticado.
+      // Qualquer pessoa pode fazer só a consulta por e-mail com no máximo 1 resultado (o limit(1) do db.js).
+      allow list: if request.query.limit <= 1;
+
+      // Cada usuário lê apenas o próprio documento (área restrita).
+      allow get: if request.auth != null && request.auth.uid == uid;
+
+      // Primeiro login ou cadastro: cria o próprio documento, com o próprio e-mail e só os campos esperados.
+      allow create: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.data.email == request.auth.token.email.lower()
+        && request.resource.data.keys().hasOnly(["nome", "email", "provedor", "criadoEm"]);
+
+      // Bônus: nos logins seguintes, só o último acesso muda.
+      allow update: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["ultimoAcesso"])
+        && request.resource.data.ultimoAcesso is timestamp;
+
+      allow delete: if false;
+    }
+
+    // acessos/{id}: histórico de logins (bônus). Cada login grava um registro do próprio usuário.
+    match /acessos/{id} {
+      allow create: if request.auth != null
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.keys().hasOnly(["nome", "email", "ultimoAcesso"])
+        && request.resource.data.ultimoAcesso is timestamp;
+
+      // O site nunca lê nem altera o histórico; quem consulta é o professor, pelo Console.
+      allow read, update, delete: if false;
+    }
+  }
+}
